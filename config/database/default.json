@@ -1,0 +1,3 @@
+{
+  "databaseUrl": "postgresql://postgres:postgres@localhost:5432/forumapi"
+}
