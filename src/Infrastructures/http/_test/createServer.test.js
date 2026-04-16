@@ -136,6 +136,52 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('pendaftaran user baru gagal karena properti yang dibutuhkan tidak ada');
+    });
+
+    it('should respond 400 when username has invalid data type', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/users',
+        payload: { username: 123, password: 'secret', fullname: 'Dicoding Indonesia' },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('pendaftaran user baru gagal karena tipe data tidak sesuai spesifikasi');
+    });
+
+    it('should respond 400 when username exceeds 50 characters', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/users',
+        payload: { username: 'a'.repeat(51), password: 'secret', fullname: 'Dicoding Indonesia' },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('pendaftaran user baru gagal karena username melebihi batas 50 karakter');
+    });
+
+    it('should respond 400 when username contains restricted characters', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/users',
+        payload: { username: 'dico-ding', password: 'secret', fullname: 'Dicoding Indonesia' },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('pendaftaran user baru gagal karena username mengandung karakter terlarang');
     });
   });
 
@@ -161,6 +207,36 @@ describe('HTTP Server', () => {
       expect(response.result.status).toEqual('success');
       expect(response.result.data.accessToken).toBeDefined();
       expect(response.result.data.refreshToken).toBeDefined();
+    });
+
+    it('should respond 400 when login payload not contain needed property', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/authentications',
+        payload: { username: 'dicoding' },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('login gagal karena properti yang dibutuhkan tidak ada');
+    });
+
+    it('should respond 400 when login payload has invalid data type', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/authentications',
+        payload: { username: 123, password: 'secret' },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('login gagal karena tipe data tidak sesuai spesifikasi');
     });
   });
 
@@ -213,6 +289,8 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
+      // Verify other domain errors remain untranslated (not translated)
+      expect(response.result.message).toEqual('NEW_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
     });
   });
 

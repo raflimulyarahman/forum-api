@@ -1,5 +1,6 @@
 const express = require('express');
 const ClientError = require('../../Commons/exceptions/ClientError');
+const DomainErrorTranslator = require('../../Commons/utils/DomainErrorTranslator');
 
 const createServer = (container) => {
   const app = express();
@@ -65,11 +66,19 @@ const createServer = (container) => {
     // Handle domain errors thrown as plain Error
     const errorMessage = err.message;
 
-    if (errorMessage.startsWith('REGISTER_USER')
-        || errorMessage.startsWith('NEW_THREAD')
+    // Translate only REGISTER_USER and USER_LOGIN errors
+    if (errorMessage.startsWith('REGISTER_USER') || errorMessage.startsWith('USER_LOGIN')) {
+      const translatedMessage = DomainErrorTranslator.translate(errorMessage);
+      return res.status(400).json({
+        status: 'fail',
+        message: translatedMessage,
+      });
+    }
+
+    // Handle other domain errors without translation
+    if (errorMessage.startsWith('NEW_THREAD')
         || errorMessage.startsWith('NEW_COMMENT')
         || errorMessage.startsWith('NEW_REPLY')
-        || errorMessage.startsWith('USER_LOGIN')
         || errorMessage.startsWith('DELETE_AUTHENTICATION_USE_CASE')
         || errorMessage.startsWith('REFRESH_AUTHENTICATION_USE_CASE')) {
       return res.status(400).json({
