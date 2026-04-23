@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const ClientError = require('../../Commons/exceptions/ClientError');
 const DomainErrorTranslator = require('../../Commons/utils/DomainErrorTranslator');
 
@@ -6,6 +7,24 @@ const createServer = (container) => {
   const app = express();
 
   app.use(express.json());
+
+  // Rate limiting middleware for /threads (90 requests per minute)
+  const threadsLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 90, // limit each IP to 90 requests per minute
+    message: {
+      status: 'fail',
+      message: 'Terlalu banyak permintaan. Silakan coba lagi setelah beberapa saat.',
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    skip: (req) => {
+      // Skip rate limiting for non-thread routes or certain endpoints
+      return !req.path.startsWith('/threads');
+    },
+  });
+
+  app.use(threadsLimiter);
 
   // JWT Authentication Middleware
   const authMiddleware = (req, res, next) => {
@@ -63,27 +82,13 @@ const createServer = (container) => {
       });
     }
 
-    // Handle domain errors thrown as plain Error
+    // Handle domain errors via DomainErrorTranslator
     const errorMessage = err.message;
-
-    // Translate only REGISTER_USER and USER_LOGIN errors
-    if (errorMessage.startsWith('REGISTER_USER') || errorMessage.startsWith('USER_LOGIN')) {
+    if (DomainErrorTranslator.isTranslatableError(errorMessage)) {
       const translatedMessage = DomainErrorTranslator.translate(errorMessage);
       return res.status(400).json({
         status: 'fail',
         message: translatedMessage,
-      });
-    }
-
-    // Handle other domain errors without translation
-    if (errorMessage.startsWith('NEW_THREAD')
-        || errorMessage.startsWith('NEW_COMMENT')
-        || errorMessage.startsWith('NEW_REPLY')
-        || errorMessage.startsWith('DELETE_AUTHENTICATION_USE_CASE')
-        || errorMessage.startsWith('REFRESH_AUTHENTICATION_USE_CASE')) {
-      return res.status(400).json({
-        status: 'fail',
-        message: errorMessage,
       });
     }
 

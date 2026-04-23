@@ -3,6 +3,7 @@ class ThreadsHandler {
     addThreadUseCase, getThreadDetailUseCase,
     addCommentUseCase, deleteCommentUseCase,
     addReplyUseCase, deleteReplyUseCase,
+    likeCommentUseCase,
   }) {
     this._addThreadUseCase = addThreadUseCase;
     this._getThreadDetailUseCase = getThreadDetailUseCase;
@@ -10,6 +11,7 @@ class ThreadsHandler {
     this._deleteCommentUseCase = deleteCommentUseCase;
     this._addReplyUseCase = addReplyUseCase;
     this._deleteReplyUseCase = deleteReplyUseCase;
+    this._likeCommentUseCase = likeCommentUseCase;
 
     this.postThreadHandler = this.postThreadHandler.bind(this);
     this.getThreadByIdHandler = this.getThreadByIdHandler.bind(this);
@@ -17,6 +19,7 @@ class ThreadsHandler {
     this.deleteCommentHandler = this.deleteCommentHandler.bind(this);
     this.postReplyHandler = this.postReplyHandler.bind(this);
     this.deleteReplyHandler = this.deleteReplyHandler.bind(this);
+    this.likeCommentHandler = this.likeCommentHandler.bind(this);
   }
 
   async postThreadHandler(req, res, next) {
@@ -106,6 +109,20 @@ class ThreadsHandler {
       const { id: owner } = req.auth.credentials;
       const { threadId, commentId, replyId } = req.params;
       await this._deleteReplyUseCase.execute(threadId, commentId, replyId, owner);
+
+      res.status(200).json({
+        status: 'success',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async likeCommentHandler(req, res, next) {
+    try {
+      const { id: owner } = req.auth.credentials;
+      const { threadId, commentId } = req.params;
+      await this._likeCommentUseCase.execute(owner, commentId);
 
       res.status(200).json({
         status: 'success',

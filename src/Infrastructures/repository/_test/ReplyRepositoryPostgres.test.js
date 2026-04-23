@@ -60,6 +60,11 @@ describe('ReplyRepositoryPostgres', () => {
   });
 
   describe('verifyReplyOwner function', () => {
+    it('should throw NotFoundError when reply not found', async () => {
+      const replyRepo = new ReplyRepositoryPostgres(pool, {});
+      await expect(replyRepo.verifyReplyOwner('reply-xxx', 'user-123')).rejects.toThrow(NotFoundError);
+    });
+
     it('should throw AuthorizationError when not the owner', async () => {
       await RepliesTableTestHelper.addReply({ id: 'reply-123', owner: 'user-123' });
       const replyRepo = new ReplyRepositoryPostgres(pool, {});

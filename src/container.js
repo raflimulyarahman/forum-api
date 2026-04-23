@@ -10,6 +10,7 @@ const AuthenticationRepositoryPostgres = require('./Infrastructures/repository/A
 const ThreadRepositoryPostgres = require('./Infrastructures/repository/ThreadRepositoryPostgres');
 const CommentRepositoryPostgres = require('./Infrastructures/repository/CommentRepositoryPostgres');
 const ReplyRepositoryPostgres = require('./Infrastructures/repository/ReplyRepositoryPostgres');
+const CommentLikeRepositoryPostgres = require('./Infrastructures/repository/CommentLikeRepositoryPostgres');
 
 // Security
 const BcryptPasswordHash = require('./Infrastructures/security/BcryptPasswordHash');
@@ -26,6 +27,7 @@ const DeleteCommentUseCase = require('./Applications/use_case/DeleteCommentUseCa
 const GetThreadDetailUseCase = require('./Applications/use_case/GetThreadDetailUseCase');
 const AddReplyUseCase = require('./Applications/use_case/AddReplyUseCase');
 const DeleteReplyUseCase = require('./Applications/use_case/DeleteReplyUseCase');
+const LikeCommentUseCase = require('./Applications/use_case/LikeCommentUseCase');
 
 const createContainer = () => {
   // Instantiate infrastructure
@@ -34,6 +36,7 @@ const createContainer = () => {
   const threadRepository = new ThreadRepositoryPostgres(pool, nanoid);
   const commentRepository = new CommentRepositoryPostgres(pool, nanoid);
   const replyRepository = new ReplyRepositoryPostgres(pool, nanoid);
+  const commentLikeRepository = new CommentLikeRepositoryPostgres(pool);
   const passwordHash = new BcryptPasswordHash(bcrypt);
   const authenticationTokenManager = new JwtTokenManager(jwt);
 
@@ -50,10 +53,11 @@ const createContainer = () => {
   const addCommentUseCase = new AddCommentUseCase({ commentRepository, threadRepository });
   const deleteCommentUseCase = new DeleteCommentUseCase({ commentRepository, threadRepository });
   const getThreadDetailUseCase = new GetThreadDetailUseCase({
-    threadRepository, commentRepository, replyRepository,
+    threadRepository, commentRepository, replyRepository, commentLikeRepository,
   });
   const addReplyUseCase = new AddReplyUseCase({ replyRepository, commentRepository, threadRepository });
   const deleteReplyUseCase = new DeleteReplyUseCase({ replyRepository, commentRepository, threadRepository });
+  const likeCommentUseCase = new LikeCommentUseCase({ commentRepository, commentLikeRepository });
 
   return {
     addUserUseCase,
@@ -66,6 +70,7 @@ const createContainer = () => {
     getThreadDetailUseCase,
     addReplyUseCase,
     deleteReplyUseCase,
+    likeCommentUseCase,
   };
 };
 

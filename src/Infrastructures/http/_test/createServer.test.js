@@ -136,7 +136,7 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
-      expect(response.result.message).toEqual('pendaftaran user baru gagal karena properti yang dibutuhkan tidak ada');
+      expect(response.result.message).toEqual('tidak dapat membuat user baru karena properti yang dibutuhkan tidak ada');
     });
 
     it('should respond 400 when username has invalid data type', async () => {
@@ -151,7 +151,7 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
-      expect(response.result.message).toEqual('pendaftaran user baru gagal karena tipe data tidak sesuai spesifikasi');
+      expect(response.result.message).toEqual('tidak dapat membuat user baru karena tipe data tidak sesuai');
     });
 
     it('should respond 400 when username exceeds 50 characters', async () => {
@@ -166,7 +166,7 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
-      expect(response.result.message).toEqual('pendaftaran user baru gagal karena username melebihi batas 50 karakter');
+      expect(response.result.message).toEqual('tidak dapat membuat user baru karena karakter username melebihi batas limit');
     });
 
     it('should respond 400 when username contains restricted characters', async () => {
@@ -181,7 +181,30 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
-      expect(response.result.message).toEqual('pendaftaran user baru gagal karena username mengandung karakter terlarang');
+      expect(response.result.message).toEqual('tidak dapat membuat user baru karena username mengandung karakter terlarang');
+    });
+
+    it('should respond 400 when username already registered', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      // Register first user
+      await makeRequest(app, {
+        method: 'POST',
+        path: '/users',
+        payload: { username: 'dicoding', password: 'secret', fullname: 'Dicoding Indonesia' },
+      });
+
+      // Try to register with same username
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/users',
+        payload: { username: 'dicoding', password: 'secret_password', fullname: 'Other Name' },
+      });
+
+      expect(response.statusCode).toEqual(400);
+      expect(response.result.status).toEqual('fail');
+      expect(response.result.message).toEqual('username tidak tersedia');
     });
   });
 
@@ -221,7 +244,7 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
-      expect(response.result.message).toEqual('login gagal karena properti yang dibutuhkan tidak ada');
+      expect(response.result.message).toEqual('harus mengirimkan username dan password');
     });
 
     it('should respond 400 when login payload has invalid data type', async () => {
@@ -236,7 +259,7 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
-      expect(response.result.message).toEqual('login gagal karena tipe data tidak sesuai spesifikasi');
+      expect(response.result.message).toEqual('username dan password harus string');
     });
   });
 
@@ -290,7 +313,7 @@ describe('HTTP Server', () => {
       expect(response.statusCode).toEqual(400);
       expect(response.result.status).toEqual('fail');
       // Verify other domain errors remain untranslated (not translated)
-      expect(response.result.message).toEqual('NEW_THREAD.NOT_CONTAIN_NEEDED_PROPERTY');
+      expect(response.result.message).toEqual('tidak dapat membuat thread baru karena properti yang dibutuhkan tidak ada');
     });
   });
 
@@ -429,6 +452,236 @@ describe('HTTP Server', () => {
 
       expect(response.statusCode).toEqual(200);
       expect(response.result.status).toEqual('success');
+    });
+
+    it('should respond 404 when thread not found', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'DELETE',
+        path: '/threads/thread-xxx/comments/comment-123/replies/reply-123',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(404);
+    });
+  });
+
+  describe('Additional Thread Scenarios', () => {
+    it('should respond 400 when payload has invalid data type for title', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads',
+        payload: { title: 123, body: 'sebuah body thread' },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(400);
+    });
+
+    it('should respond 401 when invalid token provided', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads',
+        payload: { title: 'sebuah thread', body: 'sebuah body thread' },
+        headers: { Authorization: 'Bearer invalid-token' },
+      });
+
+      expect(response.statusCode).toEqual(401);
+    });
+
+    it('should respond 401 when bearer token format invalid', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads',
+        payload: { title: 'sebuah thread', body: 'sebuah body thread' },
+        headers: { Authorization: 'invalid-token' },
+      });
+
+      expect(response.statusCode).toEqual(401);
+    });
+  });
+
+  describe('Comment Validation Scenarios', () => {
+    it('should respond 400 when comment payload missing content', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads/thread-123/comments',
+        payload: {},
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(400);
+    });
+
+    it('should respond 400 when comment content has invalid type', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads/thread-123/comments',
+        payload: { content: 123 },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(400);
+    });
+
+    it('should respond 401 when no auth token for comment', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads/thread-123/comments',
+        payload: { content: 'sebuah comment' },
+      });
+
+      expect(response.statusCode).toEqual(401);
+    });
+
+    it('should respond 403 when deleting comment not owned', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await UsersTableTestHelper.addUser({ id: 'user-456', username: 'dicoding2' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123', owner: 'user-456' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'DELETE',
+        path: '/threads/thread-123/comments/comment-123',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(403);
+    });
+
+    it('should respond 404 when deleting non-existent comment', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'DELETE',
+        path: '/threads/thread-123/comments/comment-xxx',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(404);
+    });
+  });
+
+  describe('Reply Validation Scenarios', () => {
+    it('should respond 400 when reply payload missing content', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads/thread-123/comments/comment-123/replies',
+        payload: {},
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(400);
+    });
+
+    it('should respond 404 when replying to non-existent comment', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'POST',
+        path: '/threads/thread-123/comments/comment-xxx/replies',
+        payload: { content: 'sebuah balasan' },
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(404);
+    });
+
+    it('should respond 403 when deleting reply not owned', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await UsersTableTestHelper.addUser({ id: 'user-456', username: 'dicoding2' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123' });
+      await RepliesTableTestHelper.addReply({ id: 'reply-123', owner: 'user-456' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'DELETE',
+        path: '/threads/thread-123/comments/comment-123/replies/reply-123',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(403);
+    });
+
+    it('should respond 404 when deleting non-existent reply', async () => {
+      const container = createTestContainer();
+      const app = createServer(container);
+
+      await UsersTableTestHelper.addUser({ id: 'user-123' });
+      await ThreadsTableTestHelper.addThread({ id: 'thread-123' });
+      await CommentsTableTestHelper.addComment({ id: 'comment-123' });
+      const accessToken = ServerTestHelper.getAccessToken();
+
+      const response = await makeRequest(app, {
+        method: 'DELETE',
+        path: '/threads/thread-123/comments/comment-123/replies/reply-xxx',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      expect(response.statusCode).toEqual(404);
     });
   });
 });

@@ -1,11 +1,22 @@
 class DomainErrorTranslator {
   static #translations = {
-    'REGISTER_USER.NOT_CONTAIN_NEEDED_PROPERTY': 'pendaftaran user baru gagal karena properti yang dibutuhkan tidak ada',
-    'REGISTER_USER.NOT_MEET_DATA_TYPE_SPECIFICATION': 'pendaftaran user baru gagal karena tipe data tidak sesuai spesifikasi',
-    'REGISTER_USER.USERNAME_LIMIT_CHAR': 'pendaftaran user baru gagal karena username melebihi batas 50 karakter',
-    'REGISTER_USER.USERNAME_CONTAIN_RESTRICTED_CHARACTER': 'pendaftaran user baru gagal karena username mengandung karakter terlarang',
-    'USER_LOGIN.NOT_CONTAIN_NEEDED_PROPERTY': 'login gagal karena properti yang dibutuhkan tidak ada',
-    'USER_LOGIN.NOT_MEET_DATA_TYPE_SPECIFICATION': 'login gagal karena tipe data tidak sesuai spesifikasi',
+    'REGISTER_USER.NOT_CONTAIN_NEEDED_PROPERTY': 'tidak dapat membuat user baru karena properti yang dibutuhkan tidak ada',
+    'REGISTER_USER.NOT_MEET_DATA_TYPE_SPECIFICATION': 'tidak dapat membuat user baru karena tipe data tidak sesuai',
+    'REGISTER_USER.USERNAME_LIMIT_CHAR': 'tidak dapat membuat user baru karena karakter username melebihi batas limit',
+    'REGISTER_USER.USERNAME_CONTAIN_RESTRICTED_CHARACTER': 'tidak dapat membuat user baru karena username mengandung karakter terlarang',
+    'USER_LOGIN.NOT_CONTAIN_NEEDED_PROPERTY': 'harus mengirimkan username dan password',
+    'USER_LOGIN.NOT_MEET_DATA_TYPE_SPECIFICATION': 'username dan password harus string',
+    'NEW_THREAD.NOT_CONTAIN_NEEDED_PROPERTY': 'tidak dapat membuat thread baru karena properti yang dibutuhkan tidak ada',
+    'NEW_THREAD.NOT_MEET_DATA_TYPE_SPECIFICATION': 'tidak dapat membuat thread baru karena tipe data tidak sesuai',
+    'NEW_THREAD.TITLE_LIMIT_CHAR': 'tidak dapat membuat thread baru karena karakter title melebihi batas limit',
+    'NEW_COMMENT.NOT_CONTAIN_NEEDED_PROPERTY': 'tidak dapat membuat comment baru karena properti yang dibutuhkan tidak ada',
+    'NEW_COMMENT.NOT_MEET_DATA_TYPE_SPECIFICATION': 'tidak dapat membuat comment baru karena tipe data tidak sesuai',
+    'NEW_REPLY.NOT_CONTAIN_NEEDED_PROPERTY': 'tidak dapat membuat reply baru karena properti yang dibutuhkan tidak ada',
+    'NEW_REPLY.NOT_MEET_DATA_TYPE_SPECIFICATION': 'tidak dapat membuat reply baru karena tipe data tidak sesuai',
+    'REFRESH_AUTHENTICATION_USE_CASE.NOT_CONTAIN_REFRESH_TOKEN': 'harus mengirimkan token refresh',
+    'REFRESH_AUTHENTICATION_USE_CASE.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION': 'refresh token harus string',
+    'DELETE_AUTHENTICATION_USE_CASE.NOT_CONTAIN_REFRESH_TOKEN': 'harus mengirimkan token refresh',
+    'DELETE_AUTHENTICATION_USE_CASE.PAYLOAD_NOT_MEET_DATA_TYPE_SPECIFICATION': 'refresh token harus string',
   };
 
   static translate(errorCode) {
