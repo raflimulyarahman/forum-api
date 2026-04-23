@@ -7,11 +7,10 @@ const start = async () => {
   const container = createContainer();
   const app = createServer(container);
 
-  const port = process.env.PORT || 5000;
-  const host = process.env.HOST || 'localhost';
+  const PORT = process.env.PORT || 8080;
 
-  app.listen(port, host, () => {
-    console.log(`server start at http://${host}:${port}`);
+  app.listen(PORT, () => {
+    console.log(`server start at http://localhost:${PORT}`);
   });
 };
 
