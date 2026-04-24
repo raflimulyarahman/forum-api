@@ -4,6 +4,7 @@ const createServer = require('../createServer');
 const UsersTableTestHelper = require('../../../../tests/UsersTableTestHelper');
 const ThreadsTableTestHelper = require('../../../../tests/ThreadsTableTestHelper');
 const CommentsTableTestHelper = require('../../../../tests/CommentsTableTestHelper');
+const CommentLikeTableTestHelper = require('../../../../tests/CommentLikeTableTestHelper');
 const RepliesTableTestHelper = require('../../../../tests/RepliesTableTestHelper');
 const AuthenticationsTableTestHelper = require('../../../../tests/AuthenticationsTableTestHelper');
 const ServerTestHelper = require('../../../../tests/ServerTestHelper');
@@ -18,6 +19,7 @@ const AuthenticationRepositoryPostgres = require('../../repository/Authenticatio
 const ThreadRepositoryPostgres = require('../../repository/ThreadRepositoryPostgres');
 const CommentRepositoryPostgres = require('../../repository/CommentRepositoryPostgres');
 const ReplyRepositoryPostgres = require('../../repository/ReplyRepositoryPostgres');
+const CommentLikeRepositoryPostgres = require('../../repository/CommentLikeRepositoryPostgres');
 const JwtTokenManager = require('../../security/JwtTokenManager');
 const AddUserUseCase = require('../../../Applications/use_case/AddUserUseCase');
 const LoginUserUseCase = require('../../../Applications/use_case/LoginUserUseCase');
@@ -36,6 +38,7 @@ const createTestContainer = () => {
   const threadRepository = new ThreadRepositoryPostgres(pool, nanoid);
   const commentRepository = new CommentRepositoryPostgres(pool, nanoid);
   const replyRepository = new ReplyRepositoryPostgres(pool, nanoid);
+  const commentLikeRepository = new CommentLikeRepositoryPostgres(pool);
   const passwordHash = new BcryptPasswordHash(bcrypt);
   const authenticationTokenManager = new JwtTokenManager(jwt);
 
@@ -52,7 +55,7 @@ const createTestContainer = () => {
     addCommentUseCase: new AddCommentUseCase({ commentRepository, threadRepository }),
     deleteCommentUseCase: new DeleteCommentUseCase({ commentRepository, threadRepository }),
     getThreadDetailUseCase: new GetThreadDetailUseCase({
-      threadRepository, commentRepository, replyRepository,
+      threadRepository, commentRepository, replyRepository, commentLikeRepository,
     }),
     addReplyUseCase: new AddReplyUseCase({ replyRepository, commentRepository, threadRepository }),
     deleteReplyUseCase: new DeleteReplyUseCase({ replyRepository, commentRepository, threadRepository }),
@@ -97,6 +100,7 @@ const makeRequest = (app, { method, path, payload, headers = {} }) => {
 
 describe('HTTP Server', () => {
   afterEach(async () => {
+    await CommentLikeTableTestHelper.cleanTable();
     await RepliesTableTestHelper.cleanTable();
     await CommentsTableTestHelper.cleanTable();
     await ThreadsTableTestHelper.cleanTable();

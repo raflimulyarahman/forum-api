@@ -52,15 +52,21 @@ describe('GetThreadDetailUseCase', () => {
     const mockThreadRepository = {};
     const mockCommentRepository = {};
     const mockReplyRepository = {};
+    const mockCommentLikeRepository = {};
 
     mockThreadRepository.getThreadById = vi.fn(() => Promise.resolve({ ...mockThread }));
     mockCommentRepository.getCommentsByThreadId = vi.fn(() => Promise.resolve(mockComments));
     mockReplyRepository.getRepliesByCommentIds = vi.fn(() => Promise.resolve(mockReplies));
+    mockCommentLikeRepository.getLikesByCommentIds = vi.fn(() => Promise.resolve({
+      'comment-123': 0,
+      'comment-456': 0,
+    }));
 
     const useCase = new GetThreadDetailUseCase({
       threadRepository: mockThreadRepository,
       commentRepository: mockCommentRepository,
       replyRepository: mockReplyRepository,
+      commentLikeRepository: mockCommentLikeRepository,
     });
 
     // Action
@@ -70,6 +76,7 @@ describe('GetThreadDetailUseCase', () => {
     expect(mockThreadRepository.getThreadById).toBeCalledWith(threadId);
     expect(mockCommentRepository.getCommentsByThreadId).toBeCalledWith(threadId);
     expect(mockReplyRepository.getRepliesByCommentIds).toBeCalledWith(['comment-123', 'comment-456']);
+    expect(mockCommentLikeRepository.getLikesByCommentIds).toBeCalledWith(['comment-123', 'comment-456']);
 
     expect(threadDetail.id).toEqual('thread-123');
     expect(threadDetail.title).toEqual('sebuah thread');
@@ -79,7 +86,9 @@ describe('GetThreadDetailUseCase', () => {
 
     expect(threadDetail.comments).toHaveLength(2);
     expect(threadDetail.comments[0].content).toEqual('sebuah comment');
+    expect(threadDetail.comments[0].likeCount).toEqual(0);
     expect(threadDetail.comments[1].content).toEqual('**komentar telah dihapus**');
+    expect(threadDetail.comments[1].likeCount).toEqual(0);
 
     expect(threadDetail.comments[0].replies).toHaveLength(2);
     expect(threadDetail.comments[0].replies[0].content).toEqual('sebuah balasan');

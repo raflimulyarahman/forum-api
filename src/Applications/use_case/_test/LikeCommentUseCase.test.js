@@ -11,9 +11,10 @@ describe('LikeCommentUseCase', () => {
     const mockCommentRepository = new CommentRepository();
     const mockCommentLikeRepository = new CommentLikeRepository();
 
-    mockCommentRepository.verifyCommentExists = jest.fn().mockResolvedValue();
-    mockCommentLikeRepository.checkLikeExists = jest.fn().mockResolvedValue(false);
-    mockCommentLikeRepository.addLike = jest.fn().mockResolvedValue();
+    mockCommentRepository.verifyCommentExists = vi.fn().mockResolvedValue();
+    mockCommentLikeRepository.checkLikeExists = vi.fn().mockResolvedValue(false);
+    mockCommentLikeRepository.addLike = vi.fn().mockResolvedValue();
+    mockCommentLikeRepository.removeLike = vi.fn().mockResolvedValue();
 
     const likeCommentUseCase = new LikeCommentUseCase({
       commentRepository: mockCommentRepository,
@@ -38,9 +39,10 @@ describe('LikeCommentUseCase', () => {
     const mockCommentRepository = new CommentRepository();
     const mockCommentLikeRepository = new CommentLikeRepository();
 
-    mockCommentRepository.verifyCommentExists = jest.fn().mockResolvedValue();
-    mockCommentLikeRepository.checkLikeExists = jest.fn().mockResolvedValue(true);
-    mockCommentLikeRepository.removeLike = jest.fn().mockResolvedValue();
+    mockCommentRepository.verifyCommentExists = vi.fn().mockResolvedValue();
+    mockCommentLikeRepository.checkLikeExists = vi.fn().mockResolvedValue(true);
+    mockCommentLikeRepository.removeLike = vi.fn().mockResolvedValue();
+    mockCommentLikeRepository.addLike = vi.fn().mockResolvedValue();
 
     const likeCommentUseCase = new LikeCommentUseCase({
       commentRepository: mockCommentRepository,
@@ -65,7 +67,7 @@ describe('LikeCommentUseCase', () => {
     const mockCommentRepository = new CommentRepository();
     const mockCommentLikeRepository = new CommentLikeRepository();
 
-    mockCommentRepository.verifyCommentExists = jest
+    mockCommentRepository.verifyCommentExists = vi
       .fn()
       .mockRejectedValue(new Error('COMMENT_REPOSITORY.COMMENT_NOT_FOUND'));
 
