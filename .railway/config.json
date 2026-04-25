@@ -1,0 +1,14 @@
+{
+  "environmentVariables": {
+    "PGHOST": "postgres.railway.internal",
+    "PGPORT": "5432",
+    "PGUSER": "postgres",
+    "PGPASSWORD": "dWkONmGuWnifImbtrTxTEBkQuGLjIQyU",
+    "PGDATABASE": "railway",
+    "ACCESS_TOKEN_KEY": "supersecretaccesstokenkey123456",
+    "REFRESH_TOKEN_KEY": "supersecretrefreshtokenkey654321",
+    "ACCESS_TOKEN_AGE": "3000",
+    "PORT": "8080",
+    "NODE_ENV": "production"
+  }
+}
