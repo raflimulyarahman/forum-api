@@ -8,6 +8,12 @@ const createServer = (container) => {
 
   app.use(express.json());
 
+  // Request logging middleware
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+  });
+
   // Rate limiting middleware for /threads (90 requests per minute)
   const threadsLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
@@ -79,6 +85,7 @@ const createServer = (container) => {
 
   // Error handling middleware
   app.use((err, req, res, _next) => {
+    console.error('ERROR:', err.message, err.stack);
     if (err instanceof ClientError) {
       return res.status(err.statusCode).json({
         status: 'fail',
