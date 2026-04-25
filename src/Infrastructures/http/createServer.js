@@ -73,6 +73,10 @@ const createServer = (container) => {
   app.use('/authentications', authRoutes(authenticationsHandler));
   app.use('/threads', threadsRoutes(threadsHandler, authMiddleware));
 
+  app.get('/v1/health_check', (req, res) => {
+    res.json({ status: 'ok', code: 200, message: 'OK' });
+  });
+
   // Error handling middleware
   app.use((err, req, res, _next) => {
     if (err instanceof ClientError) {
