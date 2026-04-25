@@ -132,6 +132,11 @@ npm run test:coverage
 
 ## 🚀 Deployment
 
+### Current Deployment Status
+- **Platform:** Railway.app
+- **URL:** https://forum-api-production-decc.up.railway.app/
+- **Status:** ⚠️ [See deployment guide](./DEPLOYMENT.md)
+
 ### NGINX Configuration
 Forum API menggunakan NGINX sebagai reverse proxy dengan:
 - Rate limiting 90 request/menit untuk /threads
@@ -139,27 +144,45 @@ Forum API menggunakan NGINX sebagai reverse proxy dengan:
 - Security headers
 - SSL/TLS encryption
 
-File konfigurasi tersedia di `nginx.conf`. Lihat [HTTPS_SETUP.md](./HTTPS_SETUP.md) untuk panduan deployment lengkap.
+File konfigurasi tersedia di `nginx.conf`.
 
-### GitHub Actions CI/CD
+### GitHub Actions CI/CD Pipeline
 Repository ini dilengkapi dengan automated workflows:
 
 **Continuous Integration (`.github/workflows/ci.yml`):**
-- Trigger: Pull request ke branch main
-- Run: Unit tests, integration tests, database migrations
+- Trigger: Pull request ke branch `main`
+- Run: Database migrations, unit tests, integration tests
 - Database: PostgreSQL service container
+- Status: ✅ Automated on every PR
 
 **Continuous Deployment (`.github/workflows/cd.yml`):**
-- Trigger: Push ke branch main
-- Run: Tests lalu deployment ke server
-- Deployment method: SSH ke EC2 instance (requires GitHub secrets configuration)
+- Trigger: Push ke branch `main`
+- Run: Tests + Auto-deployment ke Railway.app
+- Database: Production PostgreSQL di Railway
+- Status: ✅ Configured dan siap digunakan
 
-### Setup GitHub Secrets untuk CD
-Untuk mengaktifkan automated deployment, tambahkan secrets berikut ke repository:
-```
-DEPLOY_SSH_KEY: Private SSH key untuk server
-SERVER_HOST: IP/hostname server
-SERVER_USER: Username untuk SSH connection
+### Setup Environment Variables di Railway.app
+
+Untuk production deployment bekerja dengan baik, set variables berikut di Railway dashboard:
+
+```env
+# HTTP Server
+PORT=8080
+
+# PostgreSQL (dari Railway managed database)
+PGHOST=<railway-postgres-host>
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=<password>
+PGDATABASE=forumapi
+
+# JWT Tokens
+ACCESS_TOKEN_KEY=supersecretaccesstokenkey123456
+REFRESH_TOKEN_KEY=supersecretrefreshtokenkey654321
+ACCESS_TOKEN_AGE=3000
+
+# Environment
+NODE_ENV=production
 ```
 
 ## 🔐 Rate Limiting
@@ -173,13 +196,14 @@ Behavior: Mengembalikan 429 Too Many Requests saat limit tercapai
 ```
 
 ## 📄 File Konfigurasi Penting
-- `.env` - Environment variables (copy dari .env.example)
+- `.env` - Environment variables (lokal development)
+- `Procfile` - Railway.app start command
+- `railway.json` - Railway.app configuration
 - `nginx.conf` - NGINX reverse proxy configuration
 - `.github/workflows/ci.yml` - Continuous Integration workflow
 - `.github/workflows/cd.yml` - Continuous Deployment workflow
-- `HTTPS_SETUP.md` - Panduan setup HTTPS
 
-## 📚 Dokumentasi Tambahan
-- [HTTPS Setup Guide](./HTTPS_SETUP.md) - Panduan konfigurasi SSL/TLS
-- [instruction.md](./instruction.md) - Requirement submission
-- Forum API V2 Postman Collection - Tersedia di folder `Forum API V2 Test/`
+## 📚 Dokumentasi Lengkap
+- **[CI/CD Documentation](./CI-CD-DOCUMENTATION.md)** - Penjelasan lengkap CI/CD workflow, skenario berhasil & gagal
+- **[Deployment Guide](./DEPLOYMENT.md)** - Panduan fix 502 error, setup Railway, troubleshooting
+- **Forum API V2 Postman Collection** - Tersedia di folder `Forum API V2 Test/`
